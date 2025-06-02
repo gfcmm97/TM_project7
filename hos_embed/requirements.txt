@@ -1,0 +1,8 @@
+geopy==2.4.1
+numpy==1.23.5
+pandas==2.2.3
+protobuf==3.20.3
+Requests==2.32.3
+sentence_transformers==3.3.1
+torch==2.3.0.post100
+umap_learn==0.5.4
