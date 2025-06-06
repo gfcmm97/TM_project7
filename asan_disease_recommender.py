@@ -1,5 +1,3 @@
-# asan_disease_recommender.py
-
 import os
 import pandas as pd
 import numpy as np
@@ -11,7 +9,6 @@ import requests
 # =======================
 # [1] 환경 변수/API KEY
 # =======================
-# 실제 사용 시, .env 파일이나 환경변수로 관리 추천!
 API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyBBoNY6prPRJ5LzLLz7BcCzIzPG8HGEMnI")
 
 # =======================
@@ -68,9 +65,9 @@ def predict_department_gemini(disease_name, api_key):
         return "알 수 없음"
 
 # =======================
-# [6] 통합 추천 함수
+# [6] 통합 추천 함수 (유사도 0.5 기준 적용)
 # =======================
-def recommend_diseases_and_departments(user_input, df, vectors, top_n, api_key, tokenizer, model):
+def recommend_diseases_and_departments(user_input, df, vectors, top_n, api_key, tokenizer, model, threshold=0.5):
     cleaned = gemini_clean_symptom(user_input, api_key)
     user_vec = get_bert_embedding(cleaned, tokenizer, model)
     sims = cosine_similarity([user_vec], vectors)[0]
@@ -78,8 +75,10 @@ def recommend_diseases_and_departments(user_input, df, vectors, top_n, api_key, 
     seen = set()
     results = []
     for idx in top_indices:
-        disease_name = df.iloc[idx]["질병명"]
         sim_score = sims[idx]
+        if sim_score < threshold:
+            continue  # 유사도 0.5 미만은 추천 X
+        disease_name = df.iloc[idx]["질병명"]
         if disease_name not in seen:
             department = predict_department_gemini(disease_name, api_key)
             results.append((disease_name, sim_score, department))
@@ -89,20 +88,25 @@ def recommend_diseases_and_departments(user_input, df, vectors, top_n, api_key, 
     return cleaned, results
 
 # =======================
-# [7] 메인 실행부
+# [7] 메인 실행부 (결과 없을 때 안내문 추가)
 # =======================
 if __name__ == "__main__":
     # 모델, 데이터 로딩
-    from transformers import BertTokenizer, BertModel
     tokenizer = BertTokenizer.from_pretrained("klue/bert-base")
     model = BertModel.from_pretrained("klue/bert-base")
     df, vectors = load_data("벡터저장/df_all.pkl")
 
     user_input = input("증상을 입력하세요: ")
-    cleaned, results = recommend_diseases_and_departments(user_input, df, vectors, top_n=5, api_key=API_KEY, tokenizer=tokenizer, model=model)
+    cleaned, results = recommend_diseases_and_departments(
+        user_input, df, vectors, top_n=3,
+        api_key=API_KEY, tokenizer=tokenizer, model=model
+    )
 
     print(f"\n정제된 증상: {cleaned}")
     print("-" * 80)
-    for i, (disease, score, dept) in enumerate(results, 1):
-        print(f"{i}. {disease:<25} | 유사도: {score:.4f} | 예상 진료과: {dept}")
+    if not results:
+        print("유사한 질병이 없습니다. 증상을 좀 더 상세히 입력해 주세요.")
+    else:
+        for i, (disease, score, dept) in enumerate(results, 1):
+            print(f"{i}. {disease:<25} | 유사도: {score:.4f} | 예상 진료과: {dept}")
     print("-" * 80)
