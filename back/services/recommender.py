@@ -1,15 +1,15 @@
-# back/services/recommender.py
-
 import os
 import numpy as np
 import torch
 import pandas as pd
 import requests
+from dotenv import load_dotenv
 from transformers import BertTokenizer, BertModel
 from sklearn.metrics.pairwise import cosine_similarity
 
-# API KEY (개발 중엔 기본값 사용, 배포 시 환경변수 사용)
-API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyBBoNY6prPRJ5LzLLz7BcCzIzPG8HGEMnI")
+# API KEY
+load_dotenv()
+API_KEY = os.getenv("GEMINI_API_KEY")
 
 # 모델 및 데이터 초기화
 tokenizer = BertTokenizer.from_pretrained("klue/bert-base")
@@ -22,7 +22,14 @@ def gemini_clean_symptom(user_input: str, api_key: str = API_KEY) -> str:
     prompt = {
         "contents": [{
             "role": "user",
-            "parts": [{"text": f"아래 증상 설명의 오타 없이 깔끔하게 정제해서 한국어로 고쳐줘.\n증상: {user_input}\n→ 정제:"}]
+            "parts": [{
+                "text": (
+                    f"아래는 환자가 일상 언어로 작성한 증상 설명입니다.\n"
+                    f"이 문장을 의사가 이해할 수 있도록 정형화된 의학 용어로 간결하게 바꿔줘.\n"
+                    f"가능하면 '상복부 통증', '기침', '인후통'처럼 진료 기록에 사용되는 증상 용어를 써줘.\n"
+                    f"\n사용자 증상: {user_input}\n→ 변환된 증상:"
+                )
+            }]
         }]
     }
     response = requests.post(url, json=prompt)
@@ -30,6 +37,7 @@ def gemini_clean_symptom(user_input: str, api_key: str = API_KEY) -> str:
         return response.json()['candidates'][0]['content']['parts'][0]['text'].strip()
     except Exception:
         return user_input
+
 
 def predict_department_gemini(disease_name: str, api_key: str = API_KEY) -> str:
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
