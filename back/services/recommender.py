@@ -17,6 +17,9 @@ model = BertModel.from_pretrained("klue/bert-base")
 df = pd.read_pickle("../벡터저장/df_all.pkl")
 vectors = np.stack(df["벡터"].values)
 
+# 리뷰
+REVIEW_CSV_PATH = "../review_score/병원별_키워드_분석.csv"
+
 def gemini_clean_symptom(user_input: str, api_key: str = API_KEY) -> str:
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
     prompt = {
@@ -38,7 +41,6 @@ def gemini_clean_symptom(user_input: str, api_key: str = API_KEY) -> str:
         return response.json()['candidates'][0]['content']['parts'][0]['text'].strip()
     except Exception:
         return user_input
-
 
 def predict_department_gemini(disease_name: str, api_key: str = API_KEY) -> str:
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
@@ -90,3 +92,44 @@ def recommend_diseases(user_input: str, top_n: int = 5):
             break
 
     return cleaned, results
+
+def calculate_ranked_hospitals(hospital_list: list):
+    """
+    리뷰 점수(20점 만점 → 60점 스케일)와 거리 점수(40점 만점)를 결합하여 병원 리스트를 정렬함.
+    리뷰: 60%, 거리: 40%
+    """
+    import os
+
+    # 리뷰 점수 불러오기
+    review_df = pd.read_csv(REVIEW_CSV_PATH)
+    review_score_map = dict(zip(review_df["hospital"], review_df["score"]))
+
+    # 거리 최대값 (정규화를 위한 기준)
+    max_distance = max(h["거리_km"] for h in hospital_list) or 1e-5  # 0 나눗셈 방지
+
+    ranked_result = []
+    for h in hospital_list:
+        name = h["병원명"]
+        distance_km = h["거리_km"]
+
+        # 거리 점수 계산: 가까울수록 높음 (0~40점)
+        distance_score = (1 - (distance_km / max_distance)) * 40
+
+        # 리뷰 점수 스케일 조정: 원점수 20 → 60점 만점으로 변환
+        raw_review_score = review_score_map.get(name, 0)
+        review_score = min((raw_review_score / 20) * 60, 60)
+
+        # 최종 점수 계산
+        final_score = review_score + distance_score
+
+        h.update({
+            "리뷰점수(60점만점)": round(review_score, 2),
+            "거리점수(40점만점)": round(distance_score, 2),
+            "final_score": round(final_score, 2)
+        })
+        ranked_result.append(h)
+
+    # final_score 기준 정렬
+    ranked_result.sort(key=lambda x: x["final_score"], reverse=True)
+    return ranked_result
+

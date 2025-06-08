@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from services.recommender import gemini_clean_symptom, predict_department_gemini
+from services.recommender import gemini_clean_symptom, predict_department_gemini, calculate_ranked_hospitals
 from utils.distance import compute_distances
 
 router = APIRouter()
@@ -31,8 +31,11 @@ def recommend_hospitals(input: SymptomInput):
             "에러": f"{department}에 해당하는 병원을 찾을 수 없습니다."
         }
 
+    ranked = calculate_ranked_hospitals(hospitals)
+    top3 = ranked[:3]
+
     return {
         "정제된_증상": cleaned,
         "추천_진료과": department,
-        "근처_병원": hospitals
+        "추천_병원": top3
     }

@@ -2,12 +2,12 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from services.recommender import recommend_diseases
 
-router = APIRouter()
+router = APIRouter(prefix="/symptom", tags=["Symptom"])
 
 class SymptomInput(BaseModel):
     symptom: str
 
-@router.post("/")
+@router.post("/parse")
 def process_symptom(data: SymptomInput):
     cleaned, results = recommend_diseases(data.symptom)
     if not results:
@@ -15,5 +15,5 @@ def process_symptom(data: SymptomInput):
     
     return {
         "정제된_증상": cleaned,
-        "추천_질병": results
+        "관련_질병": results
     }
