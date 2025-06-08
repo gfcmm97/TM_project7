@@ -25,8 +25,9 @@ def gemini_clean_symptom(user_input: str, api_key: str = API_KEY) -> str:
             "parts": [{
                 "text": (
                     f"아래는 환자가 일상 언어로 작성한 증상 설명입니다.\n"
-                    f"이 문장을 의사가 이해할 수 있도록 정형화된 의학 용어로 간결하게 바꿔줘.\n"
+                    f"이 문장을 의사가 이해할 수 있도록 정형화된 의학 용어로 키워드 형식으로 바꿔줘.\n"
                     f"가능하면 '상복부 통증', '기침', '인후통'처럼 진료 기록에 사용되는 증상 용어를 써줘.\n"
+                    f"단, 사용자의 언어를 이해하기 힘들다면 False를 반환해.\n"
                     f"\n사용자 증상: {user_input}\n→ 변환된 증상:"
                 )
             }]
@@ -63,6 +64,10 @@ def get_bert_embedding(text: str) -> np.ndarray:
 
 def recommend_diseases(user_input: str, top_n: int = 5):
     cleaned = gemini_clean_symptom(user_input)
+
+    if cleaned == "False":
+        return None, None  # 추천 중단
+
     user_vec = get_bert_embedding(cleaned)
     sims = cosine_similarity([user_vec], vectors)[0]
     top_indices = sims.argsort()[::-1]
