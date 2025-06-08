@@ -1,6 +1,6 @@
-from medicine_api import fetch_medicine_list_by_keywords
-from embedding_model import recommend_by_similarity
-from interaction_filter import filter_conflicting_medicines
+from medicine.medicine_api import fetch_medicine_list_by_keywords
+from medicine.embedding_model import recommend_by_similarity
+from medicine.interaction_filter import filter_conflicting_medicines
 
 def recommend_medicines(symptom_keywords: list, user_medicine: str = "", top_k: int = 10, risk_threshold: float = 0.5) -> list:
     """
