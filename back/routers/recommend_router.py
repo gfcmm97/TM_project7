@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from services.recommender import gemini_clean_symptom, predict_department_gemini, calculate_ranked_hospitals
+from services.recommender import gemini_clean_symptom, predict_department_gemini, calculate_ranked_hospitals, generate_keyword_frequency_summary
 from utils.distance import compute_distances
 
 router = APIRouter()
@@ -32,7 +32,11 @@ def recommend_hospitals(input: SymptomInput):
         }
 
     ranked = calculate_ranked_hospitals(hospitals)
-    top3 = ranked[:3]
+    top3 = []
+    for h in ranked[:3]:
+        keyword_summary = generate_keyword_frequency_summary(h.get("keyword_freq", "{}"))
+        h["키워드_요약"] = keyword_summary
+        top3.append(h)
 
     return {
         "정제된_증상": cleaned,

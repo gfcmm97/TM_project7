@@ -1,8 +1,6 @@
-import os
+import os, torch, requests, ast
 import numpy as np
-import torch
 import pandas as pd
-import requests
 from dotenv import load_dotenv
 from transformers import BertTokenizer, BertModel
 from sklearn.metrics.pairwise import cosine_similarity
@@ -100,9 +98,10 @@ def calculate_ranked_hospitals(hospital_list: list):
     """
     import os
 
-    # 리뷰 점수 불러오기
+    # 리뷰 불러오기
     review_df = pd.read_csv(REVIEW_CSV_PATH)
     review_score_map = dict(zip(review_df["hospital"], review_df["score"]))
+    review_keyword_map = dict(zip(review_df["hospital"], review_df["keyword_freq"]))
 
     # 거리 최대값 (정규화를 위한 기준)
     max_distance = max(h["거리_km"] for h in hospital_list) or 1e-5  # 0 나눗셈 방지
@@ -119,13 +118,15 @@ def calculate_ranked_hospitals(hospital_list: list):
         raw_review_score = review_score_map.get(name, 0)
         review_score = min((raw_review_score / 20) * 60, 60)
 
-        # 최종 점수 계산
-        final_score = review_score + distance_score
+        keyword_str = review_keyword_map.get(name, "{}")
+        keyword_summary = generate_keyword_frequency_summary(keyword_str)
 
         h.update({
             "리뷰점수(60점만점)": round(review_score, 2),
             "거리점수(40점만점)": round(distance_score, 2),
-            "final_score": round(final_score, 2)
+            "final_score": round(review_score + distance_score, 2),
+            "keyword_freq": keyword_str,
+            "키워드_요약": keyword_summary
         })
         ranked_result.append(h)
 
@@ -133,3 +134,16 @@ def calculate_ranked_hospitals(hospital_list: list):
     ranked_result.sort(key=lambda x: x["final_score"], reverse=True)
     return ranked_result
 
+def generate_keyword_frequency_summary(keyword_freq_str):
+    try:
+        freq_dict = ast.literal_eval(keyword_freq_str)
+    except Exception:
+        return ""
+
+    filtered = [(k, v) for k, v in freq_dict.items() if v > 0]
+    if not filtered:
+        return ""
+
+    sorted_keywords = sorted(filtered, key=lambda x: x[1], reverse=True)
+    phrases = [f"'{k}'({v}회)" for k, v in sorted_keywords]
+    return "다음 키워드가 자주 나타났어요: " + ", ".join(phrases) + "."
