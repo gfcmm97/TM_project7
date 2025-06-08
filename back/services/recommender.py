@@ -56,6 +56,24 @@ def predict_department_gemini(disease_name: str, api_key: str = API_KEY) -> str:
         return response.json()['candidates'][0]['content']['parts'][0]['text'].strip().split('\n')[0]
     except Exception:
         return "알 수 없음"
+    
+def predict_top_departments(symptom: str, top_k: int = 3):
+    cleaned, disease_results = recommend_diseases(symptom, top_n=10)
+
+    if cleaned is None or disease_results is None:
+        return cleaned, []
+
+    departments = []
+    seen = set()
+    for result in disease_results:
+        dept = result["진료과"]
+        if dept not in seen and dept != "알 수 없음":
+            seen.add(dept)
+            departments.append(dept)
+        if len(departments) >= top_k:
+            break
+
+    return cleaned, departments
 
 def get_bert_embedding(text: str) -> np.ndarray:
     inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True)
@@ -147,4 +165,4 @@ def generate_keyword_frequency_summary(keyword_freq_str):
 
     sorted_keywords = sorted(filtered, key=lambda x: x[1], reverse=True)
     phrases = [f"'{k}'({v}회)" for k, v in sorted_keywords]
-    return "다음 키워드가 자주 나타났어요: " + ", ".join(phrases) + "."
+    return "다음 키워드가 자주 나타났어요:\n" + ", ".join(phrases)

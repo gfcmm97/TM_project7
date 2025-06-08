@@ -16,8 +16,9 @@
                     placeholder="증상을 입력하세요"
                     oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';"
                     rows="1"></textarea>
-          <button>→</button>
+          <button id="submitBtn">→</button>
         </div>
+        <div id="loading" class="loading hidden">⏳ 불러오는 중입니다...</div>
       </div>
     </div>
 
@@ -28,17 +29,17 @@
         <div class="top-info">
           <div class="info-card">
             <span class="emoji">🩺</span> 진료과<br />
-            <span>-</span>
+            <span id="department"></span>
           </div>
           <div class="info-card">
             <span class="emoji">💊</span> 예상 병명<br />
-            <span>-</span>
+            <span id="disease"></span>
           </div>
         </div>
 
         <div class="hospital-section">
           <b><span class="emoji">🏥</span> 추천 병원</b>
-          <div class="hospital-list">
+          <div class="hospital-list" id="hospital-list">
             <a href="https://map.kakao.com/link/to/서울삼성내과의원,37.5012743,127.039586" target="_blank" rel="noopener noreferrer" class="hospital-link">
               <div class="hospital-card">
                 <strong>서울삼성내과의원</strong><br />
