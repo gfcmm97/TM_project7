@@ -77,42 +77,66 @@ document.getElementById("symptomInput").addEventListener("keydown", function (e)
   }
 });
 
+document.getElementById("medicineInput").addEventListener("keydown", function (e) {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    checkMedicine();
+  }
+});
+
 async function checkMedicine() {
   const userInput = document.getElementById("medicineInput").value.trim();
   const output = document.getElementById("medicine-response");
 
+  document.getElementById("medicine-loading").classList.remove("hidden");
+
   if (!userInput || 추천약리스트.length === 0) {
     output.innerHTML = "⚠️ 상비약 또는 추천 약 정보가 없습니다.";
+
+    document.getElementById("medicine-loading").classList.add("hidden");
     return;
   }
 
-  const response = await fetch("http://localhost:8000/recommend/medicine", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      symptom_keywords: 정제된증상.split(",").map(s => s.trim()),
-      user_medicine: userInput,
-      top_k: 10,
-      risk_threshold: 0.8
-    })
-  });
+  try {
+    const response = await fetch("http://localhost:8000/recommend/medicine", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        symptom_keywords: 정제된증상.split(",").map(s => s.trim()),
+        user_medicine: userInput,
+        top_k: 10,
+        risk_threshold: 0.6
+      })
+    });
 
-  const 위험약들 = await response.json();
+    const 약들 = await response.json();
 
-  if (위험약들.length === 0) {
-    output.innerHTML = "💡 함께 복용 시 위험한 약은 없습니다.";
-    return;
+    // 위험 약: 유사도 있는 경우만 (0.8 이상)
+    const 위험약 = 약들.filter(m => m.interaction_score !== undefined && m.interaction_score >= 0.8);
+
+    if (위험약.length === 0) {
+      output.innerHTML = "✅ 함께 복용해도 괜찮습니다.";
+    } else {
+      const 위험HTML = 위험약.slice(0, 3).map(med => `
+        <div class="dangerous-medicine">
+          ⚠️ <strong>${med.itemName}</strong><br/>
+          📌 효능: ${med.efcyQesitm || "정보 없음"}<br/>
+          ❗ 유사도: ${Number(med.interaction_score).toFixed(3)}
+        </div>
+      `).join("");
+
+      output.innerHTML = `
+        <b>🚫 보유하신 "${userInput}"과 함께 복용하면 위험한 약은 다음과 같습니다:</b><br/>
+        ${위험HTML}
+      `;
+    }
+  } catch (err) {
+    console.error("상비약 검사 실패", err);
+    output.innerHTML = "❌ 오류 발생: 상비약 위험 여부를 불러오지 못했습니다.";
+  } finally {
+
+    document.getElementById("medicine-loading").classList.add("hidden");
   }
-
-  const 위험HTML = 위험약들.map(med => `
-    <div class="dangerous-medicine">
-      ⚠️ <strong>${med.itemName}</strong><br/>
-      📌 효능: ${med.efcyQesitm || "정보 없음"}<br/>
-      ❗ 유사도: ${med.interaction_score}
-    </div>
-  `).join("");
-
-  output.innerHTML = `<b>🚫 함께 복용을 피해야 할 약:</b><br/>${위험HTML}`;
 }
 
 function toggleMedicineInput() {
