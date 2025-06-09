@@ -42,6 +42,20 @@ async function fetchHospitalRecommendations() {
         `;
       }).join("");
 
+    // 추천 약 렌더링
+    const 약HTML = Array.isArray(data["추천_약"]) && data["추천_약"].length > 0
+      ? data["추천_약"].map(m => `
+        <li>
+          <strong>${m["itemName"]}</strong> (${m["entpName"]})<br />
+          💊 효능: ${m["efcyQesitm"] || "정보 없음"}<br />
+          🚫 함께 복용 주의: ${m["intrcQesitm"] || "정보 없음"}
+        </li>
+      `).join("")
+      : "<li>추천 약 없음</li>";
+
+    document.getElementById("medicine-list").innerHTML = 약HTML;
+
+
     document.getElementById("hospital-list").innerHTML = 병원HTML;
   } catch (err) {
     console.error("API 호출 실패", err);

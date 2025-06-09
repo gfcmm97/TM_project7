@@ -42,33 +42,30 @@
           <div class="hospital-list" id="hospital-list">
             <a href="https://map.kakao.com/link/to/서울삼성내과의원,37.5012743,127.039586" target="_blank" rel="noopener noreferrer" class="hospital-link">
               <div class="hospital-card">
-                <strong>서울삼성내과의원</strong><br />
-                서울 강남구 삼성로 123
+                <strong></strong><br />
                 <div class="reviews">
-                  <span>👍 좋은 리뷰: 친절하고 빠른 진료!</span>
-                  <span>👎 안좋은 리뷰: 대기시간이 길어요</span>
+                  <span></span>
+                  <span></span>
                 </div>
               </div>
             </a>
 
-            <a href="https://map.kakao.com/link/to/좋은내과의원,37.5729505,126.9793573" target="_blank" rel="noopener noreferrer" class="hospital-link">
+            <a href="https://map.kakao.com/link/to/" target="_blank" rel="noopener noreferrer" class="hospital-link">
               <div class="hospital-card">
-                <strong>좋은내과의원</strong><br />
-                서울 종로구 건강로 456
+                <strong></strong><br />
                 <div class="reviews">
-                  <span>👍 좋은 리뷰: 설명이 상세해요</span>
-                  <span>👎 안좋은 리뷰: 주차 공간이 부족해요</span>
+                  <span></span>
+                  <span></span>
                 </div>
               </div>
             </a>
 
-            <a href="https://map.kakao.com/link/to/정다운내과,37.487269,127.011862" target="_blank" rel="noopener noreferrer" class="hospital-link">
+            <a href="https://map.kakao.com/link/to/" target="_blank" rel="noopener noreferrer" class="hospital-link">
               <div class="hospital-card">
-                <strong>정다운내과</strong><br />
-                서울 서초구 행복길 789
+                <strong></strong><br />
                 <div class="reviews">
-                  <span>👍 좋은 리뷰: 시설이 깨끗해요</span>
-                  <span>👎 안좋은 리뷰: 접수 과정이 복잡했어요</span>
+                  <span></span>
+                  <span></span>
                 </div>
               </div>
             </a>
@@ -77,16 +74,28 @@
         </div>
 
         <div class="medicine-box">
-          <span class="emoji">🚑</span> <strong>상비약 체크</strong><br />
-          <label><input type="checkbox" id="hasMedicine" onchange="toggleMedicineInput()" /> 상비약이 있습니다</label>
-          <div id="medicine-input-area" class="hidden">
-            <input id="medicineInput" placeholder="예: 타이레놀" />
-            <button onclick="checkMedicine()">확인</button>
-          </div>
-          <div class="response" id="medicine-response">
-            💡 입력한 약에 대한 대처법이 여기에 표시됩니다.
-          </div>
+          <span class="emoji">💊</span> <strong>추천 약</strong><br />
+          <ul id="medicine-list">
+          </ul>
+
+          <hr style="margin: 10px 0;" />
+
+          <span class="emoji">🚑</span> <strong>상비약</strong><br />
+          <label>
+            <input type="checkbox" id="hasMedicine" onchange="toggleMedicineInput()" />
+            보유 중인 상비약이 있습니다
+          </label>
+
+        <div id="medicine-input-area" class="hidden">
+          <input id="medicineInput" placeholder="예: 타이레놀" />
+          <button onclick="checkMedicine()">확인</button>
         </div>
+
+        <div class="response" id="medicine-response">
+          💡 입력한 약에 대한 대처법이 여기에 표시됩니다.
+        </div>
+      </div>
+
       </div>
     </div>
   </div>

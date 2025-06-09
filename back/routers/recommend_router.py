@@ -9,6 +9,7 @@ from services.recommender import (
     recommend_diseases
 )
 from utils.distance import compute_distances
+from medicine.recommender import recommend_medicines
 
 router = APIRouter()
 
@@ -31,9 +32,10 @@ def recommend_hospitals(input: SymptomInput):
     if not departments:
         return {
             "정제된_증상": cleaned,
-            "추천_질병": disease_names[:3],
+            "추천_질병": [],
             "추천_진료과": [],
             "추천_병원": [],
+            "추천_약": [],
             "에러": "진료과를 예측할 수 없습니다. 증상을 다시 입력해주세요."
         }
 
@@ -48,6 +50,7 @@ def recommend_hospitals(input: SymptomInput):
             "추천_질병": disease_names[:3],
             "추천_진료과": top_departments,
             "추천_병원": [],
+            "추천_약": [],
             "에러": f"{top_departments[0]}에 해당하는 병원을 찾을 수 없습니다."
         }
 
@@ -57,9 +60,16 @@ def recommend_hospitals(input: SymptomInput):
         h["키워드_요약"] = generate_keyword_frequency_summary(h.get("keyword_freq", "{}"))
         top3_hospitals.append(h)
 
+    # 질병, 약 추천
+    _, disease_results = recommend_diseases(input.symptom)
+    disease_names = [d["질병명"] for d in disease_results] if disease_results else []
+
+    medicine_results = recommend_medicines(cleaned, top_k=3, user_medicine="", risk_threshold=0.5)    
+
     return {
         "정제된_증상": cleaned,
         "추천_질병": disease_names[:3],
         "추천_진료과": top_departments,
-        "추천_병원": top3_hospitals
+        "추천_병원": top3_hospitals,
+        "추천_약": medicine_results
     }
