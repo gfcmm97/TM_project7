@@ -18,11 +18,5 @@ def recommend_medicines(symptom_keywords: list, user_medicine: str = "", top_k: 
 
     # 2. KoBERT 유사도 기반 정렬
     ranked = recommend_by_similarity(candidates, symptom_keywords, k=top_k)
-
-    # 3. 상비약 필터링 (입력한 경우만)
-    if user_medicine.strip():
-        final = filter_conflicting_medicines(ranked, user_medicine, threshold=risk_threshold)
-    else:
-        final = ranked
-
-    return final
+    
+    return ranked

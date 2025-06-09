@@ -47,10 +47,10 @@ def filter_conflicting_medicines(medicine_list: list, user_medicine_name: str, t
     """
     user_risk_text = get_risk_text_from_medicine_name(user_medicine_name)
     if not user_risk_text.strip():
-        return medicine_list
+        return []
 
     user_embed = model.encode(user_risk_text, convert_to_tensor=True, device=device)
-    safe_list = []
+    risk_list = []
 
     for med in medicine_list:
         combined_risk_text = (
@@ -61,7 +61,6 @@ def filter_conflicting_medicines(medicine_list: list, user_medicine_name: str, t
         )
 
         if not combined_risk_text.strip() or len(combined_risk_text.strip()) < 30:
-            safe_list.append(med)
             continue
 
         med_embed = model.encode(combined_risk_text, convert_to_tensor=True, device=device)
@@ -69,9 +68,7 @@ def filter_conflicting_medicines(medicine_list: list, user_medicine_name: str, t
         med["interaction_score"] = round(sim, 4)
 
         if sim >= threshold:
-            print(f"⚠️ 제외됨: {med['itemName']} (유사도: {sim:.4f})")
-            continue
+            print(f"⚠️ 함께 복용 시 위험 약: {med['itemName']} (유사도: {sim:.4f})")
+            risk_list.append(med)
 
-        safe_list.append(med)
-
-    return safe_list
+    return risk_list

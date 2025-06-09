@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import List, Optional
 from medicine.recommender import recommend_medicines
+from medicine.interaction_filter import filter_conflicting_medicines
 
 router = APIRouter()
 

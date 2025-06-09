@@ -1,4 +1,5 @@
 let 정제된증상 = "";
+let 추천약리스트 = [];
 
 async function fetchHospitalRecommendations() {
   const symptomInput = document.getElementById("symptomInput").value.trim();
@@ -54,7 +55,7 @@ async function fetchHospitalRecommendations() {
       : "<li>추천 약 없음</li>";
 
     document.getElementById("medicine-list").innerHTML = 약HTML;
-
+    추천약리스트 = data["추천_약"] || [];
 
     document.getElementById("hospital-list").innerHTML = 병원HTML;
   } catch (err) {
@@ -75,3 +76,46 @@ document.getElementById("symptomInput").addEventListener("keydown", function (e)
     fetchHospitalRecommendations();
   }
 });
+
+async function checkMedicine() {
+  const userInput = document.getElementById("medicineInput").value.trim();
+  const output = document.getElementById("medicine-response");
+
+  if (!userInput || 추천약리스트.length === 0) {
+    output.innerHTML = "⚠️ 상비약 또는 추천 약 정보가 없습니다.";
+    return;
+  }
+
+  const response = await fetch("http://localhost:8000/recommend/medicine", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      symptom_keywords: 정제된증상.split(",").map(s => s.trim()),
+      user_medicine: userInput,
+      top_k: 10,
+      risk_threshold: 0.8
+    })
+  });
+
+  const 위험약들 = await response.json();
+
+  if (위험약들.length === 0) {
+    output.innerHTML = "💡 함께 복용 시 위험한 약은 없습니다.";
+    return;
+  }
+
+  const 위험HTML = 위험약들.map(med => `
+    <div class="dangerous-medicine">
+      ⚠️ <strong>${med.itemName}</strong><br/>
+      📌 효능: ${med.efcyQesitm || "정보 없음"}<br/>
+      ❗ 유사도: ${med.interaction_score}
+    </div>
+  `).join("");
+
+  output.innerHTML = `<b>🚫 함께 복용을 피해야 할 약:</b><br/>${위험HTML}`;
+}
+
+function toggleMedicineInput() {
+  const inputArea = document.getElementById("medicine-input-area");
+  inputArea.classList.toggle("hidden");
+}
