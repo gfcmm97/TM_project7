@@ -18,6 +18,12 @@ async function fetchHospitalRecommendations() {
     const data = await response.json();
     console.log("[병원 추천 응답]", data);
 
+    if (!data["정제된_증상"] || !Array.isArray(data["추천_질병"]) || data["추천_질병"].length === 0) {
+      document.getElementById("hospital-list").innerHTML = `<div></div><div class="warning-message">⚠️ 관련된 정보를 찾을 수 없습니다. 증상을 다시 입력해 주세요.</div><div></div>`;
+      document.getElementById("loading").classList.add("hidden");
+      return;
+    }
+
     정제된증상 = data["정제된_증상"];
     document.getElementById("department").innerText =
       Array.isArray(data["추천_진료과"]) && data["추천_진료과"].length > 0

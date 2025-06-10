@@ -208,3 +208,9 @@ body {
 .green {
   color: green;
 }
+
+.warning-message {
+  color: red;
+  font-weight: bold;
+  padding: 10px;
+}
